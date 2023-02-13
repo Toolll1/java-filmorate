@@ -1,14 +1,13 @@
 package ru.yandex.practicum.filmorate.controllers;
 
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.InvalidCreateException;
+import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.Film;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FilmControllerTests {
     FilmController filmController = new FilmController();
@@ -29,11 +28,10 @@ public class FilmControllerTests {
     @Test
     public void create_returnsTheCorrectListOfFilms_withAnIncorrectData() {
 
-        createWithAnIncorrectName();
-        createWithAnIncorrectDescription();
-        createWithAnIncorrectReleaseDate();
-        createWithAnIncorrectDuration();
-
+        assertThrows(ValidateException.class, this::incorrectName);
+        assertThrows(ValidateException.class, this::incorrectDescription);
+        assertThrows(ValidateException.class, this::incorrectReleaseDate);
+        assertThrows(ValidateException.class, this::incorrectDuration);
         assertEquals(filmController.findAll().size(), 0);
     }
 
@@ -41,18 +39,14 @@ public class FilmControllerTests {
     public void create_returnsTheCorrectListOfFilms_onBoundaryConditionsOfTheDescription() {
 
         //максимальная длина описания — 200 символов;
-        try {
-            filmController.create(Film.builder()  //длина описания — 200 символ
-                    .name("rth")
-                    .duration(100)
-                    .description("Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh " +
-                            "euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisis enim ad minim " +
-                            "veniam, quis nostrud exerci tati")
-                    .releaseDate(LocalDate.of(2010, 12, 10))
-                    .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
+        filmController.create(Film.builder()  //длина описания — 200 символ
+                .name("rth")
+                .duration(100)
+                .description("Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh " +
+                        "euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisis enim ad minim " +
+                        "veniam, quis nostrud exerci tati")
+                .releaseDate(LocalDate.of(2010, 12, 10))
+                .build());
 
         assertEquals(filmController.findAll().size(), 1);
     }
@@ -62,16 +56,12 @@ public class FilmControllerTests {
     public void create_returnsTheCorrectListOfFilms_onBoundaryConditionsOfTheReleaseDate() {
 
         //дата релиза — не раньше 28 декабря 1895 года;
-        try {
-            filmController.create(Film.builder()
-                    .name("rth")
-                    .duration(100)
-                    .description("tb")
-                    .releaseDate(LocalDate.of(1895, 12, 28))
-                    .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
+        filmController.create(Film.builder()
+                .name("rth")
+                .duration(100)
+                .description("tb")
+                .releaseDate(LocalDate.of(1895, 12, 28))
+                .build());
 
         assertEquals(filmController.findAll().size(), 1);
     }
@@ -80,17 +70,14 @@ public class FilmControllerTests {
     public void create_returnsTheCorrectListOfFilms_onBoundaryConditionsOfTheDuration() {
 
         //продолжительность фильма должна быть положительной;
-        try {
-            filmController.create(Film.builder()
-                    .name("rth")
-                    .duration(0)
-                    .description("tb")
-                    .releaseDate(LocalDate.of(1895, 12, 27))
-                    .build());
+        Film film = Film.builder()
+                .name("rth")
+                .duration(0)
+                .description("tb")
+                .releaseDate(LocalDate.of(1895, 12, 27))
+                .build();
 
-        } catch (InvalidCreateException ignored) {
-        }
-
+        assertThrows(ValidateException.class, () -> filmController.create(film));
         assertEquals(filmController.findAll().size(), 0);
     }
 
@@ -105,6 +92,7 @@ public class FilmControllerTests {
                 .build());
 
         filmController.put(Film.builder()
+                .id(1)
                 .name("rth")
                 .duration(120)
                 .description("tb1")
@@ -120,71 +108,55 @@ public class FilmControllerTests {
         assertEquals(savedFilm.getReleaseDate(), LocalDate.of(2010, 12, 11));
     }
 
-    private void createWithAnIncorrectName() {
+    private void incorrectName() {
 
         //название не может быть пустым
-        try {
-            filmController.create(Film.builder() // пустое название
-                    .name("")
-                    .duration(100)
-                    .description("tb")
-                    .releaseDate(LocalDate.of(2010, 12, 10))
-                    .build());
+        filmController.create(Film.builder() // пустое название
+                .name("")
+                .duration(100)
+                .description("tb")
+                .releaseDate(LocalDate.of(2010, 12, 10))
+                .build());
 
-            filmController.create(Film.builder()  // нет названия
-                    .duration(100)
-                    .description("tb")
-                    .releaseDate(LocalDate.of(2010, 12, 10))
-                    .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
+        filmController.create(Film.builder()  // нет названия
+                .duration(100)
+                .description("tb")
+                .releaseDate(LocalDate.of(2010, 12, 10))
+                .build());
     }
 
-    private void createWithAnIncorrectDescription() {
+    private void incorrectDescription() {
 
         //максимальная длина описания — 200 символов;
-        try {
-            filmController.create(Film.builder()  //длина описания — 201 символ
-                    .name("rth")
-                    .duration(100)
-                    .description("Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh " +
-                            "euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisis enim ad minim " +
-                            "veniam, quis nostrud exerci tatio")
-                    .releaseDate(LocalDate.of(2010, 12, 10))
-                    .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
+        filmController.create(Film.builder()  //длина описания — 201 символ
+                .name("rth")
+                .duration(100)
+                .description("Lorem ipsum dolor sit amet, consectetuer adipiscing elit, sed diam nonummy nibh " +
+                        "euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisis enim ad minim " +
+                        "veniam, quis nostrud exerci tatio")
+                .releaseDate(LocalDate.of(2010, 12, 10))
+                .build());
     }
 
-    private void createWithAnIncorrectReleaseDate() {
+    private void incorrectReleaseDate() {
 
         //дата релиза — не раньше 28 декабря 1895 года;
-        try {
-            filmController.create(Film.builder()
-                    .name("rth")
-                    .duration(100)
-                    .description("tb")
-                    .releaseDate(LocalDate.of(1895, 12, 27))
-                    .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
+        filmController.create(Film.builder()
+                .name("rth")
+                .duration(100)
+                .description("tb")
+                .releaseDate(LocalDate.of(1895, 12, 27))
+                .build());
     }
 
-    private void createWithAnIncorrectDuration() {
+    private void incorrectDuration() {
 
         //продолжительность фильма должна быть положительной;
-        try {
-            filmController.create(Film.builder()
-                    .name("rth")
-                    .duration(-1)
-                    .description("tb")
-                    .releaseDate(LocalDate.of(1895, 12, 27))
-                    .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
+        filmController.create(Film.builder()
+                .name("rth")
+                .duration(-1)
+                .description("tb")
+                .releaseDate(LocalDate.of(1895, 12, 27))
+                .build());
     }
 }

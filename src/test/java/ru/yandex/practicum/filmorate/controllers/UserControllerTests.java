@@ -1,13 +1,13 @@
 package ru.yandex.practicum.filmorate.controllers;
 
 import org.junit.jupiter.api.Test;
-import ru.yandex.practicum.filmorate.exceptions.InvalidCreateException;
-import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.User;
 
 import java.time.LocalDate;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class UserControllerTests {
 
@@ -29,9 +29,9 @@ public class UserControllerTests {
     @Test
     public void create_returnsTheCorrectListOfUsers_withAnIncorrectData() {
 
-        createWithAnIncorrectEmail();
-        createWithAnIncorrectLogin();
-        createWithAnIncorrectBirthday();
+        assertThrows(ValidateException.class, this::incorrectEmail);
+        assertThrows(ValidateException.class, this::incorrectLogin);
+        assertThrows(ValidateException.class, this::incorrectBirthday);
         assertEquals(userController.findAll().size(), 0);
     }
 
@@ -63,16 +63,12 @@ public class UserControllerTests {
     public void create_returnsTheCorrectListOfUsers_onBoundaryConditionsOfTheBirthday() {
 
         // дата рождения не может быть в будущем;
-        try {
-            userController.create(User.builder() // дата рождения сегодня
-                    .name("rth")
-                    .email("ddd@ss.ru")
-                    .login("tb")
-                    .birthday(LocalDate.of(2023, 2, 12))
-                    .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
+        userController.create(User.builder() // дата рождения сегодня
+                .name("rth")
+                .email("ddd@ss.ru")
+                .login("tb")
+                .birthday(LocalDate.of(2023, 2, 12))
+                .build());
 
         assertEquals(userController.findAll().size(), 1);
     }
@@ -88,6 +84,7 @@ public class UserControllerTests {
                 .build());
 
         userController.put(User.builder()
+                .id(1)
                 .name("rth1")
                 .email("ddd@ss.ru")
                 .login("tb1")
@@ -103,10 +100,9 @@ public class UserControllerTests {
         assertEquals(savedFilm.getBirthday(), LocalDate.of(2010, 12, 11));
     }
 
-    private void createWithAnIncorrectEmail() {
+    private void incorrectEmail() {
 
         //электронная почта не может быть пустой и должна содержать символ @
-        try {
             userController.create(User.builder() // пустая почта
                     .name("rth")
                     .email("")
@@ -133,14 +129,11 @@ public class UserControllerTests {
                     .login("tb")
                     .birthday(LocalDate.of(2010, 12, 10))
                     .build());
-        } catch (InvalidCreateException ignored) {
-        }
     }
 
-    private void createWithAnIncorrectLogin() {
+    private void incorrectLogin() {
 
         //логин не может быть пустым и содержать пробелы;
-        try {
             userController.create(User.builder() // логин с пробелом
                     .name("rth")
                     .email("ddd@ss.ru")
@@ -160,23 +153,16 @@ public class UserControllerTests {
                     .email("ddd@ss.ru")
                     .birthday(LocalDate.of(2010, 12, 10))
                     .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
     }
 
-    private void createWithAnIncorrectBirthday() {
+    private void incorrectBirthday() {
 
         // дата рождения не может быть в будущем;
-        try {
             userController.create(User.builder() // дата рождения в будущем
                     .name("rth")
                     .email("ddd@ss.ru")
                     .login("tb")
                     .birthday(LocalDate.of(2030, 12, 10))
                     .build());
-
-        } catch (InvalidCreateException ignored) {
-        }
     }
 }

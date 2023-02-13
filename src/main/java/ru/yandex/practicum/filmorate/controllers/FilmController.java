@@ -29,7 +29,7 @@ public class FilmController {
         validate(newFilm);
         newFilm.setId(newId());
         films.put(newFilm.getId(), newFilm);
-        log.info("Новый пользователь: {}", newFilm);
+        log.info("Добавлен новый фильм: {}", newFilm);
 
         return newFilm;
     }
@@ -42,7 +42,7 @@ public class FilmController {
         if (newFilm.getId() == null) {
             newFilm.setId(newId());
             films.put(newFilm.getId(), newFilm);
-            log.info("Новый пользователь: {}", newFilm);
+            log.info("Добавлен новый фильм: {}", newFilm);
         } else if (films.containsKey(newFilm.getId())) {
             log.info("Фильм: {} изменен на: {}", films.get(newFilm.getId()), newFilm);
             films.put(newFilm.getId(), newFilm);
@@ -64,14 +64,20 @@ public class FilmController {
         if (newFilm.getName() == null || newFilm.getName().isBlank()) {
             throw new ValidateException("название не может быть пустым");
         }
-        if (newFilm.getDescription().length() > 200) {
+        if (newFilm.getDescription() != null && newFilm.getDescription().length() > 200) {
             throw new ValidateException("максимальная длина описания — 200 символов");
+        } else if (newFilm.getDescription() == null || newFilm.getDescription().isBlank()) {
+            throw new ValidateException("описание не заполнено");
         }
-        if (newFilm.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
+        if (newFilm.getReleaseDate() != null && newFilm.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidateException("дата релиза — не раньше 28 декабря 1895 года");
+        } else if (newFilm.getReleaseDate() == null) {
+            throw new ValidateException("дата релиза не заполнена");
         }
-        if (newFilm.getDuration() < 0) {
+        if (newFilm.getDuration() != null && newFilm.getDuration() < 0) {
             throw new ValidateException("продолжительность фильма должна быть положительной");
+        } else if (newFilm.getDuration() == null) {
+            throw new ValidateException("продолжительность не заполнена");
         }
     }
 }

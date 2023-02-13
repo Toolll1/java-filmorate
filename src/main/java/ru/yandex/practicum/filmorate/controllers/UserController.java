@@ -36,7 +36,7 @@ public class UserController {
         validate(newUser);
         newUser.setId(newId());
         users.put(newUser.getId(), newUser);
-        log.info("Новый пользователь: {}", newUser);
+        log.info("Добавлен новый пользователь: {}", newUser);
 
         return newUser;
     }
@@ -49,7 +49,7 @@ public class UserController {
         if (newUser.getId() == null) {
             newUser.setId(newId());
             users.put(newUser.getId(), newUser);
-            log.info("Новый пользователь: {}", newUser);
+            log.info("Добавлен новый пользователь: {}", newUser);
         } else if (users.containsKey(newUser.getId())) {
             log.info("Пользователь: {} изменен на: {}", users.get(newUser.getId()), newUser);
             users.put(newUser.getId(), newUser);
@@ -78,15 +78,10 @@ public class UserController {
         if (newUser.getLogin() == null || newUser.getLogin().isBlank() || newUser.getLogin().contains(" ")) {
             throw new ValidateException("логин не может быть пустым и содержать пробелы");
         }
-        if (newUser.getBirthday().isAfter(LocalDate.now())) {
+        if (newUser.getBirthday() != null && newUser.getBirthday().isAfter(LocalDate.now())) {
             throw new ValidateException("дата рождения не может быть в будущем");
-        }
-
-        for (User value : users.values()) {
-            if (value.getLogin().equals(newUser.getLogin())) {
-                throw new ValidateException("Пользователь с таким логином " +
-                        newUser.getLogin() + " уже зарегистрирован.");
-            }
+        } else if (newUser.getBirthday() == null) {
+            throw new ValidateException("дата рождения не заполнена");
         }
     }
 }

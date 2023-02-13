@@ -103,66 +103,66 @@ public class UserControllerTests {
     private void incorrectEmail() {
 
         //электронная почта не может быть пустой и должна содержать символ @
-            userController.create(User.builder() // пустая почта
-                    .name("rth")
-                    .email("")
-                    .login("tb")
-                    .birthday(LocalDate.of(2010, 12, 10))
-                    .build());
+        userController.create(User.builder() // пустая почта
+                .name("rth")
+                .email("")
+                .login("tb")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build());
 
-            userController.create(User.builder()  // нет почты
-                    .name("rth")
-                    .login("tb")
-                    .birthday(LocalDate.of(2010, 12, 10))
-                    .build());
+        userController.create(User.builder()  // нет почты
+                .name("rth")
+                .login("tb")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build());
 
-            userController.create(User.builder() // нет @
-                    .name("rth")
-                    .email("rgwert")
-                    .login("tb")
-                    .birthday(LocalDate.of(2010, 12, 10))
-                    .build());
+        userController.create(User.builder() // нет @
+                .name("rth")
+                .email("rgwert")
+                .login("tb")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build());
 
-            userController.create(User.builder() // неправильный email
-                    .name("rth")
-                    .email("eto-nepravilnyi?email@")
-                    .login("tb")
-                    .birthday(LocalDate.of(2010, 12, 10))
-                    .build());
+        userController.create(User.builder() // неправильный email
+                .name("rth")
+                .email("eto-nepravilnyi?email@")
+                .login("tb")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build());
     }
 
     private void incorrectLogin() {
 
         //логин не может быть пустым и содержать пробелы;
-            userController.create(User.builder() // логин с пробелом
-                    .name("rth")
-                    .email("ddd@ss.ru")
-                    .login("tb ")
-                    .birthday(LocalDate.of(2010, 12, 10))
-                    .build());
+        userController.create(User.builder() // логин с пробелом
+                .name("rth")
+                .email("ddd@ss.ru")
+                .login("tb ")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build());
 
-            userController.create(User.builder() // пустой логин
-                    .name("rth")
-                    .email("ddd@ss.ru")
-                    .login("")
-                    .birthday(LocalDate.of(2010, 12, 10))
-                    .build());
+        userController.create(User.builder() // пустой логин
+                .name("rth")
+                .email("ddd@ss.ru")
+                .login("")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build());
 
-            userController.create(User.builder() // нет логина
-                    .name("rth")
-                    .email("ddd@ss.ru")
-                    .birthday(LocalDate.of(2010, 12, 10))
-                    .build());
+        userController.create(User.builder() // нет логина
+                .name("rth")
+                .email("ddd@ss.ru")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build());
     }
 
     private void incorrectBirthday() {
 
         // дата рождения не может быть в будущем;
-            userController.create(User.builder() // дата рождения в будущем
-                    .name("rth")
-                    .email("ddd@ss.ru")
-                    .login("tb")
-                    .birthday(LocalDate.of(2030, 12, 10))
-                    .build());
+        userController.create(User.builder() // дата рождения в будущем
+                .name("rth")
+                .email("ddd@ss.ru")
+                .login("tb")
+                .birthday(LocalDate.of(2030, 12, 10))
+                .build());
     }
 }

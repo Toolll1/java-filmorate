@@ -27,7 +27,7 @@ public class UserController {
     public User create(@RequestBody User newUser) {
 
         for (User value : users.values()) {
-            if (value.getEmail().equals(newUser.getEmail())){
+            if (value.getEmail().equals(newUser.getEmail())) {
                 throw new ValidateException("Пользователь с электронной почтой " +
                         newUser.getEmail() + " уже зарегистрирован.");
             }

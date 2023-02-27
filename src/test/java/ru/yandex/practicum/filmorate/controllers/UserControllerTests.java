@@ -3,6 +3,9 @@ package ru.yandex.practicum.filmorate.controllers;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 
@@ -11,7 +14,9 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class UserControllerTests {
 
-    UserController userController = new UserController();
+    UserStorage userStorage = new InMemoryUserStorage();
+    UserService userService = new UserService(userStorage);
+    UserController userController = new UserController(userService);
 
     @Test
     public void findAll_returnsTheCorrectListOfUsers_underNormalConditions() {

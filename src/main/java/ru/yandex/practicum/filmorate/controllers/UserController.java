@@ -1,87 +1,90 @@
 package ru.yandex.practicum.filmorate.controllers;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.service.UserService;
 
+import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.List;
 
 @RestController
+@RequiredArgsConstructor
 @RequestMapping("/users")
 public class UserController {
-    private final Map<Integer, User> users = new LinkedHashMap<>();
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
+
+    private final UserService userService;
 
     @GetMapping
     public Collection<User> findAll() {
 
-        return users.values();
+        return userService.findAll();
+    }
+
+    @GetMapping("/{id}/friends/common/{otherId}")
+    public List<User> mutualFriends(@PathVariable int id, @PathVariable int otherId) {
+
+        return userService.mutualFriends(id, otherId);
+    }
+
+    @GetMapping("/{id}/friends")
+    public List<User> findFriendsById(@PathVariable int id) {
+
+        return userService.findFriendsById(id);
+    }
+
+    @GetMapping("/{userId}")
+    public User findById(@PathVariable int userId) {
+
+        return userService.findById(userId);
     }
 
     @PostMapping
-    public User create(@RequestBody User newUser) {
-
-        for (User value : users.values()) {
-            if (value.getEmail().equals(newUser.getEmail())) {
-                throw new ValidateException("Пользователь с электронной почтой " +
-                        newUser.getEmail() + " уже зарегистрирован.");
-            }
-        }
+    public User create(@Valid @RequestBody User newUser) {
 
         validate(newUser);
-        newUser.setId(newId());
-        users.put(newUser.getId(), newUser);
-        log.info("Добавлен новый пользователь: {}", newUser);
 
-        return newUser;
+        return userService.create(newUser);
     }
 
     @PutMapping
-    public User put(@RequestBody User newUser) {
+    public User put(@Valid @RequestBody User newUser) {
 
         validate(newUser);
 
-        if (newUser.getId() == null) {
-            newUser.setId(newId());
-            users.put(newUser.getId(), newUser);
-            log.info("Добавлен новый пользователь: {}", newUser);
-        } else if (users.containsKey(newUser.getId())) {
-            log.info("Пользователь: {} изменен на: {}", users.get(newUser.getId()), newUser);
-            users.put(newUser.getId(), newUser);
-        } else {
-            throw new ValidateException("Пользователя с таким id нет в списке.");
-        }
-
-        return newUser;
+        return userService.put(newUser);
     }
 
-    private int id = 1;
+    @PutMapping("/{id}/friends/{friendId}")
+    public String addToFriends(@PathVariable int id, @PathVariable int friendId) {
 
-    protected int newId() {
+        return userService.addToFriends(id, friendId);
+    }
 
-        return id++;
+    @DeleteMapping("{id}/friends/{friendId}")
+    public String deleteFriends(@PathVariable int id, @PathVariable int friendId) {
+
+        return userService.deleteFriends(id, friendId);
     }
 
     private void validate(User newUser) {
 
         if (newUser.getEmail() == null || newUser.getEmail().isBlank() || !newUser.getEmail().contains("@")) {
-            throw new ValidateException("электронная почта не может быть пустой и должна содержать символ @");
+            throw new ValidateException("the email cannot be empty and must contain the character @");
         }
         if (newUser.getName() == null || newUser.getName().isBlank()) {
             newUser.setName(newUser.getLogin());
         }
         if (newUser.getLogin() == null || newUser.getLogin().isBlank() || newUser.getLogin().contains(" ")) {
-            throw new ValidateException("логин не может быть пустым и содержать пробелы");
+            throw new ValidateException("the login cannot be empty and contain spaces");
         }
         if (newUser.getBirthday() != null && newUser.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidateException("дата рождения не может быть в будущем");
+            throw new ValidateException("the date of birth cannot be in the future");
         } else if (newUser.getBirthday() == null) {
-            throw new ValidateException("дата рождения не заполнена");
+            throw new ValidateException("date of birth not filled in");
         }
     }
 }

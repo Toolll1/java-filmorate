@@ -3,6 +3,12 @@ package ru.yandex.practicum.filmorate.controllers;
 import org.junit.jupiter.api.Test;
 import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.Film;
+import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.service.UserService;
+import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
+import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
+import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
 
@@ -10,7 +16,12 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 public class FilmControllerTests {
-    FilmController filmController = new FilmController();
+
+    FilmStorage filmStorage = new InMemoryFilmStorage();
+    UserStorage userStorage = new InMemoryUserStorage();
+    UserService userService = new UserService(userStorage);
+    FilmService filmService = new FilmService(filmStorage, userService);
+    FilmController filmController = new FilmController(filmService);
 
     @Test
     public void findAll_returnsTheCorrectListOfMovies_underNormalConditions() {

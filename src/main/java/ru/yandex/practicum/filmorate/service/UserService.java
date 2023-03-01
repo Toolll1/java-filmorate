@@ -1,74 +1,71 @@
 package ru.yandex.practicum.filmorate.service;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.yandex.practicum.filmorate.controllers.UserController;
 import ru.yandex.practicum.filmorate.exceptions.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
-import java.time.LocalDate;
 import java.util.*;
 
 @Service
+@Slf4j
+@RequiredArgsConstructor
 public class UserService {
 
-    private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserStorage userStorage;
 
-    @Autowired
-    public UserService(UserStorage userStorage) {
+    public Collection<User> findAll() {
 
-        this.userStorage = userStorage;
-    }
-
-    public Map<Integer, User> findAll() {
-
-        return userStorage.findAll();
+        return userStorage.findAll().values();
     }
 
     public User findById(int userId) {
 
-        if (userStorage.findAll().containsKey(userId)) {
-            return userStorage.findAll().get(userId);
-        } else {
-            throw new ObjectNotFoundException("Пользователя с таким id нет в списке.");
+        User user = userStorage.findById(userId);
+
+        if (user == null) {
+            throw new ObjectNotFoundException("The user with this id is not in the list.");
         }
+
+        return user;
     }
 
     public User create(User newUser) {
 
-        for (User value : userStorage.findAll().values()) {
-            if (value.getEmail().equals(newUser.getEmail())) {
-                throw new ValidateException("Пользователь с электронной почтой " +
-                        newUser.getEmail() + " уже зарегистрирован.");
+        for (User user : userStorage.findAll().values()) {
+            if (user.getEmail().equals(newUser.getEmail())) {
+                throw new ValidateException("The user with email " + newUser.getEmail() + " is already registered.");
             }
         }
 
-        validate(newUser);
+        if (newUser.getFriends() == null) {
+            newUser.setFriends(new HashSet<>());
+        }
+
         newUser.setId(newId());
-        userStorage.addUser(newUser);
-        log.info("Добавлен новый пользователь: {}", newUser);
+        userStorage.add(newUser);
+        log.info("A new user has been added: {}", newUser);
 
         return newUser;
     }
 
     public User put(User newUser) {
 
-        validate(newUser);
-
+        if (newUser.getFriends() == null) {
+            newUser.setFriends(new HashSet<>());
+        }
         if (newUser.getId() == null) {
             newUser.setId(newId());
-            userStorage.addUser(newUser);
-            log.info("Добавлен новый пользователь: {}", newUser);
+            userStorage.add(newUser);
+            log.info("A new user has been added: {}", newUser);
         } else if (userStorage.findAll().containsKey(newUser.getId())) {
-            log.info("Пользователь: {} изменен на: {}", userStorage.findAll().get(newUser.getId()), newUser);
-            userStorage.addUser(newUser);
+            log.info("User: {} changed to: {}", userStorage.findById(newUser.getId()), newUser);
+            userStorage.update(newUser);
         } else {
-            throw new ObjectNotFoundException("Пользователя с таким id нет в списке.");
+            throw new ObjectNotFoundException("The user with this id is not in the list.");
         }
 
         return newUser;
@@ -77,63 +74,37 @@ public class UserService {
     public String addToFriends(int id, int friendId) {
 
         if (id == friendId) {
-            throw new ObjectNotFoundException("Некорректно указан id");
+            throw new ObjectNotFoundException("Id is specified incorrectly");
         }
 
         searchId(id, friendId);
 
-        Set<Integer> friends;
-        if (userStorage.findAll().get(id).getFriends() != null) {
-            friends = userStorage.findAll().get(id).getFriends();
-        } else {
-            friends = new HashSet<>();
-        }
-        friends.add(friendId);
-        userStorage.findAll().get(id).setFriends(friends);
+        User user1 = userStorage.findById(id);
+        User user2 = userStorage.findById(friendId);
 
-        Set<Integer> friends1;
-        if (userStorage.findAll().get(friendId).getFriends() != null) {
-            friends1 = userStorage.findAll().get(friendId).getFriends();
-        } else {
-            friends1 = new HashSet<>();
-        }
-        friends1.add(id);
-        userStorage.findAll().get(friendId).setFriends(friends1);
+        user1.getFriends().add(user2.getId());
+        user2.getFriends().add(user1.getId());
 
-        return "Пользователи" + userStorage.findAll().get(id) + " и " + userStorage.findAll().get(friendId) +
-                " теперь в друзьях друг у друга";
+        return "Users " + userStorage.findById(id) + " and " + userStorage.findById(friendId) +
+                " are now friends with each other";
     }
 
     public String deleteFriends(int id, int friendId) {
 
         if (id == friendId) {
-            throw new ObjectNotFoundException("Некорректно указан id");
+            throw new ObjectNotFoundException("Id is specified incorrectly");
         }
 
         searchId(id, friendId);
 
-        Set<Integer> friends;
-        if (userStorage.findAll().get(id).getFriends() != null
-                && userStorage.findAll().get(id).getFriends().contains(friendId)) {
-            friends = userStorage.findAll().get(id).getFriends();
-        } else {
-            throw new ObjectNotFoundException("Некорректно указан id");
-        }
-        friends.remove(friendId);
-        userStorage.findAll().get(id).setFriends(friends);
+        User user1 = userStorage.findById(id);
+        User user2 = userStorage.findById(friendId);
 
-        Set<Integer> friends1;
-        if (userStorage.findAll().get(friendId).getFriends() != null
-                && userStorage.findAll().get(friendId).getFriends().contains(id)) {
-            friends1 = userStorage.findAll().get(friendId).getFriends();
-        } else {
-            throw new ObjectNotFoundException("Некорректно указан id");
-        }
-        friends1.remove(id);
-        userStorage.findAll().get(friendId).setFriends(friends1);
+        user1.getFriends().remove(user2.getId());
+        user2.getFriends().remove(user1.getId());
 
-        return "Пользователи" + userStorage.findAll().get(id) + " и " + userStorage.findAll().get(friendId) +
-                " теперь не в друзьях друг у друга";
+        return "Users " + userStorage.findById(id) + " and " + userStorage.findById(friendId) +
+                " are no longer friends with each other";
     }
 
     public List<User> findFriendsById(int id) {
@@ -142,8 +113,8 @@ public class UserService {
 
         searchId(id);
 
-        for (Integer friendId : userStorage.findAll().get(id).getFriends()) {
-            if (friendId != null) result.add(userStorage.findAll().get(friendId));
+        for (Integer friendId : userStorage.findById(id).getFriends()) {
+            if (friendId != null) result.add(userStorage.findById(friendId));
         }
 
         return result;
@@ -155,16 +126,13 @@ public class UserService {
 
         searchId(id, otherId);
 
-        if (userStorage.findAll().get(id).getFriends() == null
-                || userStorage.findAll().get(id).getFriends().isEmpty()
-                || userStorage.findAll().get(otherId).getFriends() == null
-                || userStorage.findAll().get(otherId).getFriends().isEmpty()) {
+        if (userStorage.findById(id).getFriends().isEmpty() || userStorage.findById(otherId).getFriends().isEmpty()) {
             return result;
         }
 
-        for (Integer friendId : userStorage.findAll().get(id).getFriends()) {
-            if (userStorage.findAll().get(otherId).getFriends().contains(friendId)) {
-                result.add(userStorage.findAll().get(friendId));
+        for (Integer friendId : userStorage.findById(id).getFriends()) {
+            if (userStorage.findById(otherId).getFriends().contains(friendId)) {
+                result.add(userStorage.findById(friendId));
             }
         }
 
@@ -175,7 +143,7 @@ public class UserService {
 
         for (int id : ids) {
             if (!userStorage.findAll().containsKey(id)) {
-                throw new ObjectNotFoundException("Некорректно указан id");
+                throw new ObjectNotFoundException("Id is specified incorrectly");
             }
         }
     }
@@ -185,23 +153,5 @@ public class UserService {
     protected int newId() {
 
         return id++;
-    }
-
-    private void validate(User newUser) {
-
-        if (newUser.getEmail() == null || newUser.getEmail().isBlank() || !newUser.getEmail().contains("@")) {
-            throw new ValidateException("электронная почта не может быть пустой и должна содержать символ @");
-        }
-        if (newUser.getName() == null || newUser.getName().isBlank()) {
-            newUser.setName(newUser.getLogin());
-        }
-        if (newUser.getLogin() == null || newUser.getLogin().isBlank() || newUser.getLogin().contains(" ")) {
-            throw new ValidateException("логин не может быть пустым и содержать пробелы");
-        }
-        if (newUser.getBirthday() != null && newUser.getBirthday().isAfter(LocalDate.now())) {
-            throw new ValidateException("дата рождения не может быть в будущем");
-        } else if (newUser.getBirthday() == null) {
-            throw new ValidateException("дата рождения не заполнена");
-        }
     }
 }

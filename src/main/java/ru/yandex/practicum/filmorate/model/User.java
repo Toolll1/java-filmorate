@@ -14,7 +14,7 @@ import java.util.Set;
 @Builder
 public class User {
 
-    Set<Integer> friends;
+    private Set<Integer> friends;
     private Integer id;
     private String name;
     @Email

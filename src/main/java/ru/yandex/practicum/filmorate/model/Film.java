@@ -6,7 +6,7 @@ import lombok.Data;
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
-import java.time.LocalDate;;
+import java.time.LocalDate;
 import java.util.Set;
 
 @Data
@@ -14,7 +14,7 @@ import java.util.Set;
 public class Film {
 
     private Integer id;
-    private Set<User> like;
+    private Set<User> likes;
     @NotNull
     @NotBlank
     private final String name;

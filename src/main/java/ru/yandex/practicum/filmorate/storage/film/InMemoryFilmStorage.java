@@ -22,4 +22,22 @@ public class InMemoryFilmStorage implements FilmStorage {
 
         films.put(film.getId(), film);
     }
+
+    @Override
+    public Film findById(int id) {
+
+        return films.get(id);
+    }
+
+    @Override
+    public void update(Film film) {
+
+        films.put(film.getId(), film);
+    }
+
+    @Override
+    public void delete(Film film) {
+
+        films.remove(film.getId());
+    }
 }

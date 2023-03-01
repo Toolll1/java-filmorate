@@ -17,7 +17,7 @@ public class ErrorHandler {
     public ResponseEntity<Map<String, String>> handleValidation(final ValidateException e) {
 
         return new ResponseEntity<>(
-                Map.of("Ошибка валидации: ", e.getMessage()),
+                Map.of("message: ", e.getMessage()),
                 HttpStatus.BAD_REQUEST
         );
     }
@@ -26,7 +26,7 @@ public class ErrorHandler {
     public ResponseEntity<Map<String, String>> handleObjectNotFound(final ObjectNotFoundException e) {
 
         return new ResponseEntity<>(
-                Map.of("id не найден.", e.getMessage()),
+                Map.of("message: ", e.getMessage()),
                 HttpStatus.NOT_FOUND
         );
     }
@@ -35,7 +35,7 @@ public class ErrorHandler {
     public ResponseEntity<Map<String, String>> handleRemainingErrors(final RuntimeException e) {
 
         return new ResponseEntity<>(
-                Map.of("ошибка: ", e.getMessage()),
+                Map.of("message: ", e.getMessage()),
                 HttpStatus.INTERNAL_SERVER_ERROR
         );
     }

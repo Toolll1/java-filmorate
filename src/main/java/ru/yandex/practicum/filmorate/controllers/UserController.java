@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.service.UserService;
 
 import javax.validation.Valid;
 import java.time.LocalDate;
-import java.util.Collection;
 import java.util.List;
 
 @RestController
@@ -20,7 +19,7 @@ public class UserController {
 
 
     @GetMapping
-    public Collection<User> findAll() {
+    public List<User> findAll() {
 
         return userService.findAll();
     }
@@ -71,6 +70,12 @@ public class UserController {
         return userService.deleteFriends(id, friendId);
     }
 
+    @DeleteMapping("/{userId}")
+    public String deleteUser(@PathVariable int userId) {
+
+        return userService.deleteUser(userId);
+    }
+
     private void validate(User newUser) {
 
         if (newUser.getEmail() == null || newUser.getEmail().isBlank() || !newUser.getEmail().contains("@")) {
@@ -87,5 +92,9 @@ public class UserController {
         } else if (newUser.getBirthday() == null) {
             throw new ValidateException("date of birth not filled in");
         }
+    }
+
+    public void deleteAllData() {
+        userService.deleteAllData();
     }
 }

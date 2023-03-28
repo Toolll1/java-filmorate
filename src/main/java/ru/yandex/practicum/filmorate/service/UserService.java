@@ -17,9 +17,9 @@ public class UserService {
 
     private final UserStorage userStorage;
 
-    public Collection<User> findAll() {
+    public List<User> findAll() {
 
-        return userStorage.findAll().values();
+        return new ArrayList<>(userStorage.findAll().values());
     }
 
     public User findById(int userId) {
@@ -41,10 +41,6 @@ public class UserService {
             }
         }
 
-        if (newUser.getFriends() == null) {
-            newUser.setFriends(new HashSet<>());
-        }
-
         newUser.setId(newId());
         userStorage.add(newUser);
         log.info("A new user has been added: {}", newUser);
@@ -52,11 +48,21 @@ public class UserService {
         return newUser;
     }
 
+    public String deleteUser(int userId) {
+
+        User user = userStorage.findById(userId);
+
+        if (user == null) {
+            throw new ObjectNotFoundException("The user with this id is not in the list.");
+        } else {
+            userStorage.delete(user);
+        }
+
+        return "user with id " + userId + " deleted";
+    }
+
     public User put(User newUser) {
 
-        if (newUser.getFriends() == null) {
-            newUser.setFriends(new HashSet<>());
-        }
         if (newUser.getId() == null) {
             newUser.setId(newId());
             userStorage.add(newUser);
@@ -78,15 +84,10 @@ public class UserService {
         }
 
         searchId(id, friendId);
+        userStorage.addToFriends(id, friendId);
 
-        User user1 = userStorage.findById(id);
-        User user2 = userStorage.findById(friendId);
-
-        user1.getFriends().add(user2.getId());
-        user2.getFriends().add(user1.getId());
-
-        return "Users " + userStorage.findById(id) + " and " + userStorage.findById(friendId) +
-                " are now friends with each other";
+        return "Users\n" + userStorage.findById(id) + "\nand\n" + userStorage.findById(friendId) +
+                "\nare now friends with each other";
     }
 
     public String deleteFriends(int id, int friendId) {
@@ -96,15 +97,10 @@ public class UserService {
         }
 
         searchId(id, friendId);
+        userStorage.deleteFriends(id, friendId);
 
-        User user1 = userStorage.findById(id);
-        User user2 = userStorage.findById(friendId);
-
-        user1.getFriends().remove(user2.getId());
-        user2.getFriends().remove(user1.getId());
-
-        return "Users " + userStorage.findById(id) + " and " + userStorage.findById(friendId) +
-                " are no longer friends with each other";
+        return "Users\n" + userStorage.findById(id) + "\nand\n" + userStorage.findById(friendId) +
+                "\nare no longer friends with each other";
     }
 
     public List<User> findFriendsById(int id) {
@@ -113,7 +109,7 @@ public class UserService {
 
         searchId(id);
 
-        for (Integer friendId : userStorage.findById(id).getFriends()) {
+        for (Integer friendId : userStorage.findFriendsById(id)) {
             if (friendId != null) result.add(userStorage.findById(friendId));
         }
 
@@ -126,12 +122,15 @@ public class UserService {
 
         searchId(id, otherId);
 
-        if (userStorage.findById(id).getFriends().isEmpty() || userStorage.findById(otherId).getFriends().isEmpty()) {
+        Collection<Integer> userOneFriends = userStorage.findFriendsById(id);
+        Collection<Integer> userTwoFriends = userStorage.findFriendsById(otherId);
+
+        if (userOneFriends.isEmpty() || userTwoFriends.isEmpty()) {
             return result;
         }
 
-        for (Integer friendId : userStorage.findById(id).getFriends()) {
-            if (userStorage.findById(otherId).getFriends().contains(friendId)) {
+        for (Integer friendId : userOneFriends) {
+            if (userTwoFriends.contains(friendId)) {
                 result.add(userStorage.findById(friendId));
             }
         }
@@ -153,5 +152,10 @@ public class UserService {
     protected int newId() {
 
         return id++;
+    }
+
+    public void deleteAllData() {
+        userStorage.deleteAllData();
+        id = 1;
     }
 }

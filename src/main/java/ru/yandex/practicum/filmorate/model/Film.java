@@ -7,6 +7,7 @@ import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Past;
 import java.time.LocalDate;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -22,5 +23,7 @@ public class Film {
     @Past
     private final LocalDate releaseDate;
     private final Integer duration;
+    private final FilmRating filmRating;
+    private Set<FilmGenre> genres;
 
 }

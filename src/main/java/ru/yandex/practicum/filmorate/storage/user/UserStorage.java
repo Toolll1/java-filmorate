@@ -2,12 +2,11 @@ package ru.yandex.practicum.filmorate.storage.user;
 
 import ru.yandex.practicum.filmorate.model.User;
 
-import javax.validation.constraints.NotNull;
+import java.util.Collection;
 import java.util.Map;
 
 public interface UserStorage {
 
-    @NotNull
     Map<Integer, User> findAll();
 
     void add(User user);
@@ -17,4 +16,12 @@ public interface UserStorage {
     void update(User user);
 
     void delete(User user);
+
+    void addToFriends(int id, int friendId);
+
+    void deleteFriends(int id, int friendId);
+
+    void deleteAllData();
+
+    Collection<Integer> findFriendsById(int id);
 }

@@ -69,18 +69,18 @@ public class FilmControllerTests {
         creatingThreeFilm();
         creatingThreeUsers();
 
-        filmController.addLikes(1,1);
-        filmController.addLikes(3,2);
-        filmController.addLikes(3,3);
-        filmController.addLikes(2,1);
-        filmController.addLikes(2,2);
-        filmController.addLikes(2,3);
+        filmController.addLikes(1, 1);
+        filmController.addLikes(3, 2);
+        filmController.addLikes(3, 3);
+        filmController.addLikes(2, 1);
+        filmController.addLikes(2, 2);
+        filmController.addLikes(2, 3);
 
-        List <Film> popularFilms = (List<Film>) filmController.findPopularFilms(6);
+        List<Film> popularFilms = (List<Film>) filmController.findPopularFilms(6);
         assertEquals(popularFilms.get(0).getId(), 2);
         assertEquals(popularFilms.size(), 3);
 
-        List <Film> popularFilms1 = (List<Film>) filmController.findPopularFilms(2);
+        List<Film> popularFilms1 = (List<Film>) filmController.findPopularFilms(2);
         assertEquals(popularFilms1.get(0).getId(), 2);
         assertEquals(popularFilms1.size(), 2);
     }
@@ -92,9 +92,9 @@ public class FilmControllerTests {
         creatingThreeFilm();
         creatingThreeUsers();
 
-        filmController.addLikes(2,1);
-        filmController.addLikes(2,2);
-        filmController.addLikes(2,3);
+        filmController.addLikes(2, 1);
+        filmController.addLikes(2, 2);
+        filmController.addLikes(2, 3);
 
         assertEquals(filmController.findById(2).getLikesCount(), 3);
     }
@@ -106,10 +106,10 @@ public class FilmControllerTests {
         creatingThreeFilm();
         creatingThreeUsers();
 
-        filmController.addLikes(1,1);
+        filmController.addLikes(1, 1);
         assertEquals(filmController.findById(1).getLikesCount(), 1);
 
-        filmController.deleteLikes(1,1);
+        filmController.deleteLikes(1, 1);
         assertEquals(filmController.findById(1).getLikesCount(), 0);
     }
 

@@ -1,11 +1,11 @@
 package ru.yandex.practicum.filmorate.controllers;
 
 import lombok.RequiredArgsConstructor;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.User;
 
@@ -23,13 +23,7 @@ public class UserControllerTests {
 
     private final UserController userController;
 
-
-    @BeforeEach
-    public void createUserAndController() {
-
-        userController.deleteAllData();
-    }
-
+    @DirtiesContext
     @Test
     public void findFriendsById_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -53,6 +47,7 @@ public class UserControllerTests {
         assertEquals(userController.findFriendsById(1), List.of(user2));
     }
 
+    @DirtiesContext
     @Test
     public void mutualFriends_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -81,9 +76,10 @@ public class UserControllerTests {
         userController.addToFriends(1, 2);
         userController.addToFriends(3, 2);
 
-        assertEquals(userController.mutualFriends(1,3), List.of(user2));
+        assertEquals(userController.mutualFriends(1, 3), List.of(user2));
     }
 
+    @DirtiesContext
     @Test
     public void addToFriends_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -110,6 +106,7 @@ public class UserControllerTests {
 
     }
 
+    @DirtiesContext
     @Test
     public void deleteFriends_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -134,12 +131,13 @@ public class UserControllerTests {
 
         assertEquals(userController.findFriendsById(1), List.of(user2));
 
-        userController.deleteFriends(1,2);
+        userController.deleteFriends(1, 2);
 
         assertEquals(userController.findFriendsById(1), new ArrayList<>());
 
     }
 
+    @DirtiesContext
     @Test
     public void deleteUser_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -158,6 +156,8 @@ public class UserControllerTests {
 
         assertEquals(userController.findAll(), new ArrayList<>());
     }
+
+    @DirtiesContext
     @Test
     public void findById_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -172,6 +172,7 @@ public class UserControllerTests {
         assertEquals(userController.findById(1), user1);
     }
 
+    @DirtiesContext
     @Test
     public void findAll_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -185,6 +186,7 @@ public class UserControllerTests {
         assertEquals(userController.findAll().size(), 1);
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfUsers_withAnIncorrectData() {
 
@@ -194,6 +196,7 @@ public class UserControllerTests {
         assertEquals(userController.findAll().size(), 0);
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfUsers_inTheAbsenceOfAName() {
 
@@ -218,6 +221,7 @@ public class UserControllerTests {
         }
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfUsers_onBoundaryConditionsOfTheBirthday() {
 
@@ -232,6 +236,7 @@ public class UserControllerTests {
         assertEquals(userController.findAll().size(), 1);
     }
 
+    @DirtiesContext
     @Test
     public void put_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -241,8 +246,6 @@ public class UserControllerTests {
                 .login("tb")
                 .birthday(LocalDate.of(2010, 12, 10))
                 .build());
-
-        System.out.println(userController.findAll());
 
         userController.put(User.builder()
                 .id(1)

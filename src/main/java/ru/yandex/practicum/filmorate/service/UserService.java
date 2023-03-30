@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.util.*;
 
@@ -86,8 +86,8 @@ public class UserService {
         searchId(id, friendId);
         userStorage.addToFriends(id, friendId);
 
-        return "Users\n" + userStorage.findById(id) + "\nand\n" + userStorage.findById(friendId) +
-                "\nare now friends with each other";
+        return "Users\n" + userStorage.findById(id) + "\nand\n" + userStorage.findById(friendId)
+                + "\nare now friends with each other";
     }
 
     public String deleteFriends(int id, int friendId) {
@@ -99,8 +99,8 @@ public class UserService {
         searchId(id, friendId);
         userStorage.deleteFriends(id, friendId);
 
-        return "Users\n" + userStorage.findById(id) + "\nand\n" + userStorage.findById(friendId) +
-                "\nare no longer friends with each other";
+        return "Users\n" + userStorage.findById(id) + "\nand\n" + userStorage.findById(friendId)
+                + "\nare no longer friends with each other";
     }
 
     public List<User> findFriendsById(int id) {
@@ -152,10 +152,5 @@ public class UserService {
     protected int newId() {
 
         return id++;
-    }
-
-    public void deleteAllData() {
-        userStorage.deleteAllData();
-        id = 1;
     }
 }

@@ -1,10 +1,10 @@
-package ru.yandex.practicum.filmorate.storage.user;
-
+package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
+import ru.yandex.practicum.filmorate.storage.UserStorage;
 
 import java.sql.ResultSet;
 import java.sql.SQLException;
@@ -34,35 +34,16 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
-    public void deleteAllData() {
-
-        jdbcTemplate.update("DELETE FROM user_friends");
-        jdbcTemplate.update("DELETE FROM users");
-        jdbcTemplate.update("DELETE FROM film_genre");
-        jdbcTemplate.update("DELETE FROM film_likes");
-        jdbcTemplate.update("DELETE FROM films");
-        jdbcTemplate.update("DELETE FROM rating");
-        jdbcTemplate.update("DELETE FROM genre");
-
-    }
-
-    @Override
     public void deleteFriends(int id, int friendId) {
 
-        String sqlQuery = "delete from user_friends where user_id = ?";
-        jdbcTemplate.update(sqlQuery, id);
+        jdbcTemplate.update("delete from user_friends where user_id = ? and friend_id = ?", id, friendId);
     }
 
 
     @Override
     public void addToFriends(int id, int friendId) {
 
-        String sqlQuery = "insert into user_friends(user_id, friend_id) " +
-                "values (?, ?)";
-
-        jdbcTemplate.update(sqlQuery,
-                id,
-                friendId);
+        jdbcTemplate.update("insert into user_friends(user_id, friend_id) values (?, ?)", id, friendId);
     }
 
 
@@ -84,15 +65,11 @@ public class UserDbStorage implements UserStorage {
     public Map<Integer, User> findAll() {
 
         Map<Integer, User> mapUsers = new HashMap<>();
-        String sqlQuery = "select user_id, name, email, login, birthday from users";
-        List<User> listUsers;
+        List<User> listUsers = jdbcTemplate.query("select user_id, name, email, login, birthday from users",
+                this::mapRowToUser);
 
-        try {
-            listUsers = jdbcTemplate.query(sqlQuery, this::mapRowToUser);
-            for (User user : listUsers) {
-                mapUsers.put(user.getId(), user);
-            }
-        } catch (Exception ignored) {
+        for (User user : listUsers) {
+            mapUsers.put(user.getId(), user);
         }
 
         return mapUsers;
@@ -111,6 +88,7 @@ public class UserDbStorage implements UserStorage {
                     userRows.getString("login"),
                     userRows.getDate("birthday").toLocalDate());
         } else {
+
             return null;
         }
     }
@@ -118,9 +96,7 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void update(User user) {
 
-        String sqlQuery = "update users set " +
-                "name = ?, email = ?, login = ?, birthday = ?" +
-                "where user_id = ?";
+        String sqlQuery = "update users set name = ?, email = ?, login = ?, birthday = ? where user_id = ?";
 
         jdbcTemplate.update(sqlQuery
                 , user.getName()
@@ -133,9 +109,9 @@ public class UserDbStorage implements UserStorage {
     @Override
     public void delete(User user) {
 
-        String sqlQuery = "delete from users where user_id = ?";
-
-        jdbcTemplate.update(sqlQuery, user.getId());
+        jdbcTemplate.update("delete from user_friends where user_id = ?", user.getId());
+        jdbcTemplate.update("delete from film_likes where user_id = ?", user.getId());
+        jdbcTemplate.update("delete from users where user_id = ?", user.getId());
     }
 
     private User mapRowToUser(ResultSet resultSet, int rowNum) throws SQLException {

@@ -6,11 +6,13 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 
 import ru.yandex.practicum.filmorate.controllers.FilmController;
+import ru.yandex.practicum.filmorate.controllers.GenreController;
+import ru.yandex.practicum.filmorate.controllers.MpaController;
 import ru.yandex.practicum.filmorate.controllers.UserController;
 
 import java.util.Map;
 
-@ControllerAdvice(assignableTypes = {FilmController.class, UserController.class})
+@ControllerAdvice(assignableTypes = {FilmController.class, UserController.class, GenreController.class, MpaController.class})
 public class ErrorHandler {
 
     @ExceptionHandler

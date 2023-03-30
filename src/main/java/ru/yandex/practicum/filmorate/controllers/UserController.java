@@ -17,7 +17,6 @@ public class UserController {
 
     private final UserService userService;
 
-
     @GetMapping
     public List<User> findAll() {
 
@@ -92,9 +91,5 @@ public class UserController {
         } else if (newUser.getBirthday() == null) {
             throw new ValidateException("date of birth not filled in");
         }
-    }
-
-    public void deleteAllData() {
-        userService.deleteAllData();
     }
 }

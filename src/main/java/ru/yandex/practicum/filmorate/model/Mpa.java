@@ -2,9 +2,14 @@ package ru.yandex.practicum.filmorate.model;
 
 import lombok.*;
 
-@Data
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 @EqualsAndHashCode
-public class FilmGenre {
+@ToString
+@Builder
+public class Mpa {
     private int id;
     private String name;
 }

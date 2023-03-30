@@ -1,31 +1,187 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
-import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.service.FilmService;
+import ru.yandex.practicum.filmorate.model.Genre;
+import ru.yandex.practicum.filmorate.model.Mpa;
+import ru.yandex.practicum.filmorate.model.User;
 import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
-import ru.yandex.practicum.filmorate.storage.film.InMemoryFilmStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserDbStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class FilmControllerTests {
 
-    FilmStorage filmStorage = new InMemoryFilmStorage();
-    UserStorage userStorage = new UserDbStorage(new JdbcTemplate());
-    UserService userService = new UserService(userStorage);
-    FilmService filmService = new FilmService(filmStorage, userService);
-    FilmController filmController = new FilmController(filmService);
+    private final FilmController filmController;
+    private final UserService userService;
 
+    @DirtiesContext
+    @Test
+    public void findById_returnsTheCorrectMovie_underNormalConditions() {
 
+        Film film = Film.builder()
+                .name("rth")
+                .duration(100)
+                .description("tb")
+                .releaseDate(LocalDate.of(2010, 12, 10))
+                .genres(new ArrayList<>(List.of(Genre.builder()
+                                .id(1)
+                                .build(),
+                        Genre.builder()
+                                .id(2)
+                                .build())))
+                .mpa(new Mpa(1, "G"))
+                .build();
 
+        filmController.create(film);
+
+        assertEquals(filmController.findById(1).getId(), film.getId());
+        assertEquals(filmController.findById(1).getReleaseDate(), film.getReleaseDate());
+        assertEquals(filmController.findById(1).getDescription(), film.getDescription());
+        assertEquals(filmController.findById(1).getDuration(), film.getDuration());
+        assertEquals(filmController.findById(1).getName(), film.getName());
+        assertEquals(filmController.findById(1).getMpa().getId(), film.getMpa().getId());
+        assertEquals(filmController.findById(1).getMpa().getName(), film.getMpa().getName());
+        assertEquals(filmController.findById(1).getGenres().size(), film.getGenres().size());
+        assertEquals(filmController.findById(1).getGenres().get(0).getId(), film.getGenres().get(0).getId());
+        assertEquals(filmController.findById(1).getGenres().get(1).getId(), film.getGenres().get(1).getId());
+        assertEquals(filmController.findById(1).getGenres().get(0).getName(), "Комедия");
+        assertEquals(filmController.findById(1).getGenres().get(1).getName(), "Драма");
+    }
+
+    @DirtiesContext
+    @Test
+    public void findPopularFilms_returnsTheCorrectListOfMovies_underNormalConditions() {
+
+        creatingThreeFilm();
+        creatingThreeUsers();
+
+        filmController.addLikes(1,1);
+        filmController.addLikes(3,2);
+        filmController.addLikes(3,3);
+        filmController.addLikes(2,1);
+        filmController.addLikes(2,2);
+        filmController.addLikes(2,3);
+
+        List <Film> popularFilms = (List<Film>) filmController.findPopularFilms(6);
+        assertEquals(popularFilms.get(0).getId(), 2);
+        assertEquals(popularFilms.size(), 3);
+
+        List <Film> popularFilms1 = (List<Film>) filmController.findPopularFilms(2);
+        assertEquals(popularFilms1.get(0).getId(), 2);
+        assertEquals(popularFilms1.size(), 2);
+    }
+
+    @DirtiesContext
+    @Test
+    public void addLikes_returnsTheCorrectListOfLikes_underNormalConditions() {
+
+        creatingThreeFilm();
+        creatingThreeUsers();
+
+        filmController.addLikes(2,1);
+        filmController.addLikes(2,2);
+        filmController.addLikes(2,3);
+
+        assertEquals(filmController.findById(2).getLikesCount(), 3);
+    }
+
+    @DirtiesContext
+    @Test
+    public void deleteLikes_returnsTheCorrectListOfLikes_underNormalConditions() {
+
+        creatingThreeFilm();
+        creatingThreeUsers();
+
+        filmController.addLikes(1,1);
+        assertEquals(filmController.findById(1).getLikesCount(), 1);
+
+        filmController.deleteLikes(1,1);
+        assertEquals(filmController.findById(1).getLikesCount(), 0);
+    }
+
+    @DirtiesContext
+    @Test
+    public void deleteFilm_returnsTheCorrectListOfFilms_underNormalConditions() {
+
+        Film film = Film.builder()
+                .name("rth")
+                .duration(100)
+                .description("tb")
+                .releaseDate(LocalDate.of(2010, 12, 10))
+                .genres(new ArrayList<>(List.of(Genre.builder()
+                        .id(1)
+                        .build())))
+                .mpa(new Mpa(1, "G"))
+                .build();
+
+        filmController.create(film);
+        assertEquals(filmController.findAll().size(), 1);
+
+        filmController.deleteFilm(1);
+        assertEquals(filmController.findAll().size(), 0);
+    }
+
+    private void creatingThreeUsers() {
+
+        User user1 = User.builder()
+                .name("name1")
+                .email("email1@mail.ru")
+                .login("login1")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+        User user2 = User.builder()
+                .name("name2")
+                .email("email2@mail.ru")
+                .login("login2")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+        User user3 = User.builder()
+                .name("name3")
+                .email("email3@mail.ru")
+                .login("login3")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+        userService.create(user1);
+        userService.create(user2);
+        userService.create(user3);
+    }
+
+    private void creatingThreeFilm() {
+
+        Film film = Film.builder()
+                .name("rth")
+                .duration(100)
+                .description("tb")
+                .releaseDate(LocalDate.of(2010, 12, 10))
+                .genres(new ArrayList<>(List.of(Genre.builder()
+                        .id(1)
+                        .build())))
+                .mpa(new Mpa(1, "G"))
+                .build();
+
+        filmController.create(film);
+        filmController.create(film);
+        filmController.create(film);
+    }
+
+    @DirtiesContext
     @Test
     public void findAll_returnsTheCorrectListOfMovies_underNormalConditions() {
 
@@ -34,11 +190,15 @@ public class FilmControllerTests {
                 .duration(100)
                 .description("tb")
                 .releaseDate(LocalDate.of(2010, 12, 10))
+                .mpa(new Mpa(1, "G"))
                 .build());
 
         assertEquals(filmController.findAll().size(), 1);
+
+
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfFilms_withAnIncorrectData() {
 
@@ -49,6 +209,7 @@ public class FilmControllerTests {
         assertEquals(filmController.findAll().size(), 0);
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfFilms_onBoundaryConditionsOfTheDescription() {
 
@@ -60,12 +221,13 @@ public class FilmControllerTests {
                         "euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisis enim ad minim " +
                         "veniam, quis nostrud exerci tati")
                 .releaseDate(LocalDate.of(2010, 12, 10))
+                .mpa(new Mpa(1, "G"))
                 .build());
 
         assertEquals(filmController.findAll().size(), 1);
     }
 
-
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfFilms_onBoundaryConditionsOfTheReleaseDate() {
 
@@ -75,11 +237,13 @@ public class FilmControllerTests {
                 .duration(100)
                 .description("tb")
                 .releaseDate(LocalDate.of(1895, 12, 28))
+                .mpa(new Mpa(1, "G"))
                 .build());
 
         assertEquals(filmController.findAll().size(), 1);
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfFilms_onBoundaryConditionsOfTheDuration() {
 
@@ -89,12 +253,14 @@ public class FilmControllerTests {
                 .duration(0)
                 .description("tb")
                 .releaseDate(LocalDate.of(1895, 12, 27))
+                .mpa(new Mpa(1, "G"))
                 .build();
 
         assertThrows(ValidateException.class, () -> filmController.create(film));
         assertEquals(filmController.findAll().size(), 0);
     }
 
+    @DirtiesContext
     @Test
     public void put_returnsTheCorrectListOfMovies_underNormalConditions() {
 
@@ -103,6 +269,7 @@ public class FilmControllerTests {
                 .duration(100)
                 .description("tb")
                 .releaseDate(LocalDate.of(2010, 12, 10))
+                .mpa(new Mpa(1, "G"))
                 .build());
 
         filmController.put(Film.builder()
@@ -111,6 +278,7 @@ public class FilmControllerTests {
                 .duration(120)
                 .description("tb1")
                 .releaseDate(LocalDate.of(2010, 12, 11))
+                .mpa(new Mpa(1, "G"))
                 .build());
 
         Film savedFilm = (Film) (((Object[]) filmController.findAll().toArray())[0]);
@@ -130,12 +298,14 @@ public class FilmControllerTests {
                 .duration(100)
                 .description("tb")
                 .releaseDate(LocalDate.of(2010, 12, 10))
+                .mpa(new Mpa(1, "G"))
                 .build());
 
         filmController.create(Film.builder()  // нет названия
                 .duration(100)
                 .description("tb")
                 .releaseDate(LocalDate.of(2010, 12, 10))
+                .mpa(new Mpa(1, "G"))
                 .build());
     }
 
@@ -149,6 +319,7 @@ public class FilmControllerTests {
                         "euismod tincidunt ut laoreet dolore magna aliquam erat volutpat. Ut wisis enim ad minim " +
                         "veniam, quis nostrud exerci tatio")
                 .releaseDate(LocalDate.of(2010, 12, 10))
+                .mpa(new Mpa(1, "G"))
                 .build());
     }
 
@@ -160,6 +331,7 @@ public class FilmControllerTests {
                 .duration(100)
                 .description("tb")
                 .releaseDate(LocalDate.of(1895, 12, 27))
+                .mpa(new Mpa(1, "G"))
                 .build());
     }
 
@@ -171,6 +343,7 @@ public class FilmControllerTests {
                 .duration(-1)
                 .description("tb")
                 .releaseDate(LocalDate.of(1895, 12, 27))
+                .mpa(new Mpa(1, "G"))
                 .build());
     }
 }

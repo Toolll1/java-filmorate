@@ -68,6 +68,12 @@ public class FilmController {
         return filmService.deleteLikes(id, userId);
     }
 
+    @DeleteMapping("/{id}")
+    public String deleteFilm(@PathVariable int id) {
+
+        return filmService.deleteFilm(id);
+    }
+
     private void validate(Film newFilm) {
 
         if (newFilm.getName() == null || newFilm.getName().isBlank()) {
@@ -78,8 +84,7 @@ public class FilmController {
         } else if (newFilm.getDescription() == null || newFilm.getDescription().isBlank()) {
             throw new ValidateException("description is not filled in");
         }
-        if (newFilm.getReleaseDate() != null && newFilm.getReleaseDate().isBefore(
-                LocalDate.of(1895, 12, 28))) {
+        if (newFilm.getReleaseDate() != null && newFilm.getReleaseDate().isBefore(LocalDate.of(1895, 12, 28))) {
             throw new ValidateException("release date — no earlier than December 28, 1895");
         } else if (newFilm.getReleaseDate() == null) {
             throw new ValidateException("the release date is not filled in");

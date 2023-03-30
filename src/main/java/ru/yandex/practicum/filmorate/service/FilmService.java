@@ -5,8 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.yandex.practicum.filmorate.exceptions.ObjectNotFoundException;
 import ru.yandex.practicum.filmorate.model.Film;
-import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.storage.film.FilmStorage;
+import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -37,65 +36,76 @@ public class FilmService {
 
     public Film create(Film newFilm) {
 
-        if (newFilm.getLikes() == null) {
-            newFilm.setLikes(new HashSet<>());
-        }
-
         newFilm.setId(newId());
-        filmStorage.add(newFilm);
         log.info("Added a new movie: {}", newFilm);
 
-        return newFilm;
+        return filmStorage.add(newFilm);
     }
 
     public Film put(Film newFilm) {
 
-        if (newFilm.getLikes() == null) {
-            newFilm.setLikes(new HashSet<>());
-        }
         if (newFilm.getId() == null) {
             newFilm.setId(newId());
             log.info("Added a new movie: {}", newFilm);
-            filmStorage.add(newFilm);
+            return filmStorage.add(newFilm);
         } else if (filmStorage.findAll().containsKey(newFilm.getId())) {
             log.info("Фильм: {} изменен на: {}", filmStorage.findById(newFilm.getId()), newFilm);
-            if (newFilm.getLikes() == null) newFilm.setLikes(new HashSet<>());
-            filmStorage.update(newFilm);
+            return filmStorage.update(newFilm);
         } else {
             throw new ObjectNotFoundException("The movie with this id is not in the list.");
         }
 
-        return newFilm;
     }
 
     public String addLikes(int filmId, int userId) {
 
+        searchId(filmId);
+        userService.searchId(userId);
+
         Film film = filmStorage.findById(filmId);
-        User user = userService.findById(userId);
 
-        film.getLikes().add(user);
+        filmStorage.addLikes(filmId, userId);
 
-        return "The movie " + film + " now has " + film.getLikes().size() + " likes.";
+        return "The movie " + film + " now has " + film.getLikesCount() + " likes.";
 
     }
 
     public String deleteLikes(int filmId, int userId) {
 
+        searchId(filmId);
+        userService.searchId(userId);
+        filmStorage.deleteLikes(filmId, userId);
+
         Film film = filmStorage.findById(filmId);
-        User user = userService.findById(userId);
 
-        film.getLikes().remove(user);
+        return "The movie " + film + " now has " + film.getLikesCount() + " likes.";
+    }
 
-        return "The movie " + film + " now has " + film.getLikes().size() + " likes.";
+    public String deleteFilm(int id) {
+
+        searchId(id);
+
+        Film film = filmStorage.findById(id);
+
+        filmStorage.delete(film);
+
+        return "user with id " + id + " deleted";
     }
 
     public Collection<Film> findPopularFilms(Integer count) {
 
-        return filmStorage.findAll().values()
-                .stream()
-                .sorted((film1, film2) -> film2.getLikes().size() - film1.getLikes().size())
-                .limit(count)
-                .collect(Collectors.toList());
+        return filmStorage.findAll().values().stream()
+                .sorted((film1, film2) -> film2.getLikesCount() - film1.getLikesCount())
+                .limit(count).collect(Collectors.toList());
+    }
+
+    public void searchId(int... ids) {
+
+        for (int id : ids) {
+            if (!filmStorage.findAll().containsKey(id)) {
+                throw new ObjectNotFoundException("Id is specified incorrectly");
+            }
+        }
     }
 
     private int id = 1;

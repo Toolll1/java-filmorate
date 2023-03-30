@@ -82,13 +82,13 @@ public class FilmDbStorage implements FilmStorage {
                 "name = ?, description = ?, release_date = ?, duration = ?, rating_id = ?" +
                 "where film_id = ?";
 
-        jdbcTemplate.update(sqlQuery
-                , film.getName()
-                , film.getDescription()
-                , film.getReleaseDate()
-                , film.getDuration()
-                , film.getMpa().getId()
-                , film.getId());
+        jdbcTemplate.update(sqlQuery,
+                film.getName(),
+                film.getDescription(),
+                film.getReleaseDate(),
+                film.getDuration(),
+                film.getMpa().getId(),
+                film.getId());
 
         jdbcTemplate.update("delete from film_genre where film_id = ?", film.getId());
 

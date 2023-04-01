@@ -1,6 +1,7 @@
 package ru.yandex.practicum.filmorate.storage.impl;
 
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.simple.SimpleJdbcInsert;
 import org.springframework.jdbc.support.rowset.SqlRowSet;
 import org.springframework.stereotype.Component;
 import ru.yandex.practicum.filmorate.model.User;
@@ -34,6 +35,15 @@ public class UserDbStorage implements UserStorage {
     }
 
     @Override
+    public List<User> mutualFriends(int id, int otherId) {
+
+        return jdbcTemplate.query("select * from users where user_id in " +
+                        "(select friend_id from user_friends where user_id = ? and friend_id in " +
+                        "(select friend_id from user_friends where user_id = ?))",
+                this::mapRowToUser, id, otherId);
+    }
+
+    @Override
     public void deleteFriends(int id, int friendId) {
 
         jdbcTemplate.update("delete from user_friends where user_id = ? and friend_id = ?", id, friendId);
@@ -48,17 +58,24 @@ public class UserDbStorage implements UserStorage {
 
 
     @Override
-    public void add(User user) {
+    public User add(User user) {
 
-        String sqlQuery = "insert into users(user_id, name, email, login, birthday) " +
-                "values (?, ?, ?, ?, ?)";
+        SimpleJdbcInsert simpleJdbcInsert = new SimpleJdbcInsert(jdbcTemplate)
+                .withTableName("users")
+                .usingGeneratedKeyColumns("user_id");
 
-        jdbcTemplate.update(sqlQuery,
-                user.getId(),
-                user.getName(),
-                user.getEmail(),
-                user.getLogin(),
-                user.getBirthday());
+        Map<String, Object> newFilm = new HashMap<>(
+                Map.of("name", user.getName(),
+                        "email", user.getEmail(),
+                        "login", user.getLogin(),
+                        "birthday", user.getBirthday()
+                ));
+
+        Integer id = (int) simpleJdbcInsert.executeAndReturnKey(newFilm).longValue();
+
+        user.setId(id);
+
+        return findById(user.getId());
     }
 
     @Override
@@ -88,13 +105,12 @@ public class UserDbStorage implements UserStorage {
                     userRows.getString("login"),
                     userRows.getDate("birthday").toLocalDate());
         } else {
-
             return null;
         }
     }
 
     @Override
-    public void update(User user) {
+    public User update(User user) {
 
         String sqlQuery = "update users set name = ?, email = ?, login = ?, birthday = ? where user_id = ?";
 
@@ -104,6 +120,8 @@ public class UserDbStorage implements UserStorage {
                 user.getLogin(),
                 user.getBirthday(),
                 user.getId());
+
+        return findById(user.getId());
     }
 
     @Override

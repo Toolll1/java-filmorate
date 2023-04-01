@@ -58,21 +58,21 @@ public class UserController {
     }
 
     @PutMapping("/{id}/friends/{friendId}")
-    public String addToFriends(@PathVariable int id, @PathVariable int friendId) {
+    public void addToFriends(@PathVariable int id, @PathVariable int friendId) {
 
-        return userService.addToFriends(id, friendId);
+        userService.addToFriends(id, friendId);
     }
 
     @DeleteMapping("{id}/friends/{friendId}")
-    public String deleteFriends(@PathVariable int id, @PathVariable int friendId) {
+    public void deleteFriends(@PathVariable int id, @PathVariable int friendId) {
 
-        return userService.deleteFriends(id, friendId);
+        userService.deleteFriends(id, friendId);
     }
 
     @DeleteMapping("/{userId}")
-    public String deleteUser(@PathVariable int userId) {
+    public void deleteUser(@PathVariable int userId) {
 
-        return userService.deleteUser(userId);
+        userService.deleteUser(userId);
     }
 
     private void validate(User newUser) {

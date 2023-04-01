@@ -8,7 +8,6 @@ import ru.yandex.practicum.filmorate.model.Film;
 import ru.yandex.practicum.filmorate.storage.FilmStorage;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -36,82 +35,54 @@ public class FilmService {
 
     public Film create(Film newFilm) {
 
-        newFilm.setId(newId());
-        log.info("Added a new movie: {}", newFilm);
+        Film film = filmStorage.add(newFilm);
 
-        return filmStorage.add(newFilm);
+        log.info("Added a new movie: {}", film);
+
+        return film;
     }
 
     public Film put(Film newFilm) {
 
         if (newFilm.getId() == null) {
-            newFilm.setId(newId());
-            log.info("Added a new movie: {}", newFilm);
-            return filmStorage.add(newFilm);
+            Film film = filmStorage.add(newFilm);
+            log.info("Added a new movie: {}", film);
+            return film;
         } else if (filmStorage.findAll().containsKey(newFilm.getId())) {
-            log.info("Фильм: {} изменен на: {}", filmStorage.findById(newFilm.getId()), newFilm);
-            return filmStorage.update(newFilm);
+            Film film = filmStorage.update(newFilm);
+            log.info("Фильм: {} изменен на: {}", filmStorage.findById(newFilm.getId()), film);
+            return film;
         } else {
             throw new ObjectNotFoundException("The movie with this id is not in the list.");
         }
-
     }
 
-    public String addLikes(int filmId, int userId) {
-
-        searchId(filmId);
-        userService.searchId(userId);
-
-        Film film = filmStorage.findById(filmId);
+    public void addLikes(int filmId, int userId) {
 
         filmStorage.addLikes(filmId, userId);
 
-        return "The movie " + film + " now has " + film.getLikesCount() + " likes.";
-
+        log.info("I received a request to add a like from a user with id {} to a movie with id {}", userId, filmId);
     }
 
-    public String deleteLikes(int filmId, int userId) {
+    public void deleteLikes(int filmId, int userId) {
 
-        searchId(filmId);
-        userService.searchId(userId);
         filmStorage.deleteLikes(filmId, userId);
 
-        Film film = filmStorage.findById(filmId);
+        userService.isExist(userId);
 
-        return "The movie " + film + " now has " + film.getLikesCount() + " likes.";
+        log.info("I received a request to delete like from a user with id {} to a movie with id {}", userId, filmId);
     }
 
-    public String deleteFilm(int id) {
+    public void deleteFilm(int id) {
 
-        searchId(id);
+        filmStorage.delete(id);
 
-        Film film = filmStorage.findById(id);
-
-        filmStorage.delete(film);
-
-        return "user with id " + id + " deleted";
+        log.info("a request was received to delete a user with id {}", id);
     }
 
-    public Collection<Film> findPopularFilms(Integer count) {
+    public List<Film> findPopularFilms(Integer count) {
 
-        return filmStorage.findAll().values().stream()
-                .sorted((film1, film2) -> film2.getLikesCount() - film1.getLikesCount())
-                .limit(count).collect(Collectors.toList());
-    }
+        return filmStorage.findPopularFilms(count);
 
-    public void searchId(int... ids) {
-
-        for (int id : ids) {
-            if (!filmStorage.findAll().containsKey(id)) {
-                throw new ObjectNotFoundException("Id is specified incorrectly");
-            }
-        }
-    }
-
-    private int id = 1;
-
-    protected int newId() {
-
-        return id++;
     }
 }

@@ -76,11 +76,11 @@ public class FilmControllerTests {
         filmController.addLikes(2, 2);
         filmController.addLikes(2, 3);
 
-        List<Film> popularFilms = (List<Film>) filmController.findPopularFilms(6);
+        List<Film> popularFilms = filmController.findPopularFilms(6);
         assertEquals(popularFilms.get(0).getId(), 2);
         assertEquals(popularFilms.size(), 3);
 
-        List<Film> popularFilms1 = (List<Film>) filmController.findPopularFilms(2);
+        List<Film> popularFilms1 = filmController.findPopularFilms(2);
         assertEquals(popularFilms1.get(0).getId(), 2);
         assertEquals(popularFilms1.size(), 2);
     }

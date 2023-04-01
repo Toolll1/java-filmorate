@@ -41,14 +41,14 @@ public class UserService {
             }
         }
 
-        newUser.setId(newId());
-        userStorage.add(newUser);
-        log.info("A new user has been added: {}", newUser);
+        User user = userStorage.add(newUser);
 
-        return newUser;
+        log.info("A new user has been added: {}", user);
+
+        return user;
     }
 
-    public String deleteUser(int userId) {
+    public void deleteUser(int userId) {
 
         User user = userStorage.findById(userId);
 
@@ -58,18 +58,17 @@ public class UserService {
             userStorage.delete(user);
         }
 
-        return "user with id " + userId + " deleted";
+        log.info("user with id {} deleted", userId);
     }
 
     public User put(User newUser) {
 
         if (newUser.getId() == null) {
-            newUser.setId(newId());
-            userStorage.add(newUser);
-            log.info("A new user has been added: {}", newUser);
+            User user = userStorage.add(newUser);
+            log.info("A new user has been added: {}", user);
         } else if (userStorage.findAll().containsKey(newUser.getId())) {
-            log.info("User: {} changed to: {}", userStorage.findById(newUser.getId()), newUser);
-            userStorage.update(newUser);
+            User user = userStorage.update(newUser);
+            log.info("User: {} changed to: {}", userStorage.findById(newUser.getId()), user);
         } else {
             throw new ObjectNotFoundException("The user with this id is not in the list.");
         }
@@ -77,37 +76,37 @@ public class UserService {
         return newUser;
     }
 
-    public String addToFriends(int id, int friendId) {
+    public void addToFriends(int id, int friendId) {
 
         if (id == friendId) {
             throw new ObjectNotFoundException("Id is specified incorrectly");
         }
 
-        searchId(id, friendId);
+        isExist(id, friendId);
         userStorage.addToFriends(id, friendId);
 
-        return "Users\n" + userStorage.findById(id) + "\nand\n" + userStorage.findById(friendId)
-                + "\nare now friends with each other";
+        log.info("User {} and {} are now friends with each other", userStorage.findById(id),
+                userStorage.findById(friendId));
     }
 
-    public String deleteFriends(int id, int friendId) {
+    public void deleteFriends(int id, int friendId) {
 
         if (id == friendId) {
             throw new ObjectNotFoundException("Id is specified incorrectly");
         }
 
-        searchId(id, friendId);
+        isExist(id, friendId);
         userStorage.deleteFriends(id, friendId);
 
-        return "Users\n" + userStorage.findById(id) + "\nand\n" + userStorage.findById(friendId)
-                + "\nare no longer friends with each other";
+        log.info("User {} and {} re no longer friends with each other", userStorage.findById(id),
+                userStorage.findById(friendId));
     }
 
     public List<User> findFriendsById(int id) {
 
         List<User> result = new ArrayList<>();
 
-        searchId(id);
+        isExist(id);
 
         for (Integer friendId : userStorage.findFriendsById(id)) {
             if (friendId != null) result.add(userStorage.findById(friendId));
@@ -118,39 +117,17 @@ public class UserService {
 
     public List<User> mutualFriends(int id, int otherId) {
 
-        List<User> result = new ArrayList<>();
+        isExist(id, otherId);
 
-        searchId(id, otherId);
-
-        Collection<Integer> userOneFriends = userStorage.findFriendsById(id);
-        Collection<Integer> userTwoFriends = userStorage.findFriendsById(otherId);
-
-        if (userOneFriends.isEmpty() || userTwoFriends.isEmpty()) {
-            return result;
-        }
-
-        for (Integer friendId : userOneFriends) {
-            if (userTwoFriends.contains(friendId)) {
-                result.add(userStorage.findById(friendId));
-            }
-        }
-
-        return result;
+        return userStorage.mutualFriends(id, otherId);
     }
 
-    public void searchId(int... ids) {
+    public void isExist(int... ids) {
 
         for (int id : ids) {
             if (!userStorage.findAll().containsKey(id)) {
                 throw new ObjectNotFoundException("Id is specified incorrectly");
             }
         }
-    }
-
-    private int id = 1;
-
-    protected int newId() {
-
-        return id++;
     }
 }

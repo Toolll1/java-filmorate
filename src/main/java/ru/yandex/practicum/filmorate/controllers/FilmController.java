@@ -10,6 +10,7 @@ import javax.validation.Valid;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -31,7 +32,7 @@ public class FilmController {
     }
 
     @GetMapping("/popular")
-    public Collection<Film> findPopularFilms(@RequestParam(defaultValue = "10", required = false) Integer count) {
+    public List<Film> findPopularFilms(@RequestParam(defaultValue = "10", required = false) Integer count) {
 
         if (count <= 0 || filmService.findAll().isEmpty()) {
             return new ArrayList<>();
@@ -57,21 +58,21 @@ public class FilmController {
     }
 
     @PutMapping("/{id}/like/{userId}")
-    public String addLikes(@PathVariable int id, @PathVariable int userId) {
+    public void addLikes(@PathVariable int id, @PathVariable int userId) {
 
-        return filmService.addLikes(id, userId);
+        filmService.addLikes(id, userId);
     }
 
     @DeleteMapping("{id}/like/{userId}")
-    public String deleteLikes(@PathVariable int id, @PathVariable int userId) {
+    public void deleteLikes(@PathVariable int id, @PathVariable int userId) {
 
-        return filmService.deleteLikes(id, userId);
+        filmService.deleteLikes(id, userId);
     }
 
     @DeleteMapping("/{id}")
-    public String deleteFilm(@PathVariable int id) {
+    public void deleteFilm(@PathVariable int id) {
 
-        return filmService.deleteFilm(id);
+        filmService.deleteFilm(id);
     }
 
     private void validate(Film newFilm) {

@@ -49,13 +49,11 @@ public class UserDbStorage implements UserStorage {
         jdbcTemplate.update("delete from user_friends where user_id = ? and friend_id = ?", id, friendId);
     }
 
-
     @Override
     public void addToFriends(int id, int friendId) {
 
         jdbcTemplate.update("insert into user_friends(user_id, friend_id) values (?, ?)", id, friendId);
     }
-
 
     @Override
     public User add(User user) {

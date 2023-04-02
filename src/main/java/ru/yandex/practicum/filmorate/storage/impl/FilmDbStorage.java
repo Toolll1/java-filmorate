@@ -13,6 +13,7 @@ import ru.yandex.practicum.filmorate.storage.MpaStorage;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Component
 public class FilmDbStorage implements FilmStorage {
@@ -37,6 +38,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findPopularFilms(Integer count) {
 
+        Map<Integer, Film> mapFilms = new HashMap<>();
+
         String sqlQuery = "select f.film_id, f.name, f.description, f.release_date, f.duration, " +
                 "r.rating_id, count (fl.film_id) as likes\n" +
                 "FROM films as f\n" +
@@ -46,7 +49,20 @@ public class FilmDbStorage implements FilmStorage {
                 "order by likes desc\n" +
                 "limit ?;";
 
-        return jdbcTemplate.query(sqlQuery, this::mapRowToFilm, count);
+        List<Film> listFilms = jdbcTemplate.query(sqlQuery, this::mapRowToFilm, count);
+        Map<Integer, List<Genre>> filmGenres = createFilmGenres(listFilms);
+
+        for (Film film : listFilms) {
+            if (filmGenres.get(film.getId()) != null) {
+                film.setGenres(filmGenres.get(film.getId()));
+            } else {
+                film.setGenres(new ArrayList<>());
+            }
+
+            mapFilms.put(film.getId(), film);
+        }
+
+        return new ArrayList<>(mapFilms.values());
     }
 
     @Override
@@ -92,8 +108,8 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public Film findById(Integer id) {
 
-        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("select f.film_id, f.name, f.description, f.release_date," +
-                "f.duration, r.rating_id, count (fl.film_id) as likes\n" +
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("select f.film_id, f.name, f.description," +
+                "f.release_date, f.duration, r.rating_id, count (fl.film_id) as likes\n" +
                 "from films as f\n" +
                 "left outer join film_likes as fl on f.film_id = fl.film_id\n" +
                 "left outer join rating as r on f.rating_id = r.rating_id\n" +
@@ -105,9 +121,10 @@ public class FilmDbStorage implements FilmStorage {
             String sql = "select g.genre_id, g.name\n" +
                     "from genre g \n" +
                     "left outer join film_genre fg on g.genre_id = fg.genre_id \n" +
-                    "where fg.film_id =?;";
+                    "where fg.film_id = ?;";
 
-            List<Genre> genres = jdbcTemplate.query(sql, (rs, rn) -> makeGenre(rs), filmRows.getInt("film_id"));
+            List<Genre> genres = jdbcTemplate.query(sql, (rs, rn) -> makeGenre(rs),
+                    filmRows.getInt("film_id"));
 
             return new Film(
                     filmRows.getInt("film_id"),
@@ -173,22 +190,51 @@ public class FilmDbStorage implements FilmStorage {
                 "group by f.film_id, r.rating_id;";
 
         List<Film> listFilms = jdbcTemplate.query(sqlQuery, this::mapRowToFilm);
+        Map<Integer, List<Genre>> filmGenres = createFilmGenres(listFilms);
 
         for (Film film : listFilms) {
+            if (filmGenres.get(film.getId()) != null) {
+                film.setGenres(filmGenres.get(film.getId()));
+            } else {
+                film.setGenres(new ArrayList<>());
+            }
+
             mapFilms.put(film.getId(), film);
         }
 
         return mapFilms;
     }
 
+    private Map<Integer, List<Genre>> createFilmGenres(List<Film> listFilms) {
+
+        Map<Integer, List<Genre>> filmGenres = new HashMap<>();
+        SqlRowSet filmRows = jdbcTemplate.queryForRowSet("SELECT *,fg.film_id " +
+                "from genre as g " +
+                "left outer join film_genre fg on g.genre_id = fg.genre_id " +
+                "where fg.film_id " +
+                "in (" + listFilms.stream().
+                map(film -> String.valueOf(film.getId())).collect(Collectors.joining(",")) + ")");
+
+        while (filmRows.next()) {
+            if (filmGenres.containsKey(filmRows.getInt("film_id"))) {
+                List<Genre> newGenres = new ArrayList<>(filmGenres.get(filmRows.getInt("film_id")));
+
+                newGenres.add(new Genre(
+                        filmRows.getInt("genre_id"),
+                        filmRows.getString("name")));
+                filmGenres.put(filmRows.getInt("film_id"), newGenres);
+            } else {
+
+                filmGenres.put(filmRows.getInt("film_id"), List.of(new Genre(
+                        filmRows.getInt("genre_id"),
+                        filmRows.getString("name"))));
+            }
+        }
+
+        return filmGenres;
+    }
+
     private Film mapRowToFilm(ResultSet resultSet, int rowNum) throws SQLException {
-
-        String sql = "select g.genre_id, g.name\n" +
-                "from genre g \n" +
-                "left outer join film_genre fg on g.genre_id = fg.genre_id \n" +
-                "where fg.film_id =?;";
-
-        List<Genre> genres = jdbcTemplate.query(sql, (rs, rn) -> makeGenre(rs), resultSet.getInt("film_id"));
 
         return Film.builder()
                 .id(resultSet.getInt("film_id"))
@@ -198,11 +244,11 @@ public class FilmDbStorage implements FilmStorage {
                 .duration(resultSet.getInt("duration"))
                 .likesCount(resultSet.getInt("likes"))
                 .mpa(mpaStorage.findById(resultSet.getInt("rating_id")))
-                .genres(genres)
                 .build();
     }
 
     private Genre makeGenre(ResultSet rs) throws SQLException {
+
         return new Genre(rs.getInt("genre_id"), rs.getString("name"));
     }
 }

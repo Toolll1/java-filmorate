@@ -212,8 +212,8 @@ public class FilmDbStorage implements FilmStorage {
                 "from genre as g " +
                 "left outer join film_genre fg on g.genre_id = fg.genre_id " +
                 "where fg.film_id " +
-                "in (" + listFilms.stream().
-                map(film -> String.valueOf(film.getId())).collect(Collectors.joining(",")) + ")");
+                "in (" + listFilms.stream()
+                .map(film -> String.valueOf(film.getId())).collect(Collectors.joining(",")) + ")");
 
         while (filmRows.next()) {
             if (filmGenres.containsKey(filmRows.getInt("film_id"))) {

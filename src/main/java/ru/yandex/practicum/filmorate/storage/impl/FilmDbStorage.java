@@ -38,7 +38,7 @@ public class FilmDbStorage implements FilmStorage {
     @Override
     public List<Film> findPopularFilms(Integer count) {
 
-        Map<Integer, Film> mapFilms = new HashMap<>();
+        Map<Integer, Film> mapFilms = new LinkedHashMap<>();
 
         String sqlQuery = "select f.film_id, f.name, f.description, f.release_date, f.duration, " +
                 "r.rating_id, count (fl.film_id) as likes\n" +

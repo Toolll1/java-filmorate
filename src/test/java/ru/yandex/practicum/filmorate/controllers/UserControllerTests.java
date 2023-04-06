@@ -1,23 +1,178 @@
 package ru.yandex.practicum.filmorate.controllers;
 
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.test.annotation.DirtiesContext;
 import ru.yandex.practicum.filmorate.exceptions.ValidateException;
 import ru.yandex.practicum.filmorate.model.User;
-import ru.yandex.practicum.filmorate.service.UserService;
-import ru.yandex.practicum.filmorate.storage.user.InMemoryUserStorage;
-import ru.yandex.practicum.filmorate.storage.user.UserStorage;
 
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
+@SpringBootTest
+@AutoConfigureTestDatabase
+@RequiredArgsConstructor(onConstructor_ = @Autowired)
 public class UserControllerTests {
 
-    UserStorage userStorage = new InMemoryUserStorage();
-    UserService userService = new UserService(userStorage);
-    UserController userController = new UserController(userService);
+    private final UserController userController;
 
+    @DirtiesContext
+    @Test
+    public void findFriendsById_returnsTheCorrectListOfUsers_underNormalConditions() {
+
+        User user1 = User.builder()
+                .name("name1")
+                .email("email1@mail.ru")
+                .login("login1")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+        User user2 = User.builder()
+                .name("name2")
+                .email("email2@mail.ru")
+                .login("login2")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+        userController.create(user1);
+        userController.create(user2);
+        userController.addToFriends(1, 2);
+        assertEquals(userController.findFriendsById(1), List.of(user2));
+    }
+
+    @DirtiesContext
+    @Test
+    public void mutualFriends_returnsTheCorrectListOfUsers_underNormalConditions() {
+
+        User user1 = User.builder()
+                .name("name1")
+                .email("email1@mail.ru")
+                .login("login1")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+        User user2 = User.builder()
+                .name("name2")
+                .email("email2@mail.ru")
+                .login("login2")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+        User user3 = User.builder()
+                .name("name3")
+                .email("email3@mail.ru")
+                .login("login3")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+        userController.create(user1);
+        userController.create(user2);
+        userController.create(user3);
+        userController.addToFriends(1, 2);
+        userController.addToFriends(3, 2);
+
+        assertEquals(userController.mutualFriends(1, 3), List.of(user2));
+    }
+
+    @DirtiesContext
+    @Test
+    public void addToFriends_returnsTheCorrectListOfUsers_underNormalConditions() {
+
+        User user1 = User.builder()
+                .name("name1")
+                .email("email1@mail.ru")
+                .login("login1")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+        User user2 = User.builder()
+                .name("name2")
+                .email("email2@mail.ru")
+                .login("login2")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+
+        userController.create(user1);
+        userController.create(user2);
+
+        userController.addToFriends(1, 2);
+
+        assertEquals(userController.findFriendsById(1), List.of(user2));
+
+    }
+
+    @DirtiesContext
+    @Test
+    public void deleteFriends_returnsTheCorrectListOfUsers_underNormalConditions() {
+
+        User user1 = User.builder()
+                .name("name1")
+                .email("email1@mail.ru")
+                .login("login1")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+        User user2 = User.builder()
+                .name("name2")
+                .email("email2@mail.ru")
+                .login("login2")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+
+        userController.create(user1);
+        userController.create(user2);
+
+        userController.addToFriends(1, 2);
+
+        assertEquals(userController.findFriendsById(1), List.of(user2));
+
+        userController.deleteFriends(1, 2);
+
+        assertEquals(userController.findFriendsById(1), new ArrayList<>());
+
+    }
+
+    @DirtiesContext
+    @Test
+    public void deleteUser_returnsTheCorrectListOfUsers_underNormalConditions() {
+
+        User user1 = User.builder()
+                .name("name1")
+                .email("email1@mail.ru")
+                .login("login1")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+        userController.create(user1);
+
+        assertEquals(userController.findAll(), List.of(user1));
+
+        userController.deleteUser(1);
+
+        assertEquals(userController.findAll(), new ArrayList<>());
+    }
+
+    @DirtiesContext
+    @Test
+    public void findById_returnsTheCorrectListOfUsers_underNormalConditions() {
+
+        User user1 = User.builder()
+                .name("name1")
+                .email("email1@mail.ru")
+                .login("login1")
+                .birthday(LocalDate.of(2010, 12, 10))
+                .build();
+
+        userController.create(user1);
+        assertEquals(userController.findById(1), user1);
+    }
+
+    @DirtiesContext
     @Test
     public void findAll_returnsTheCorrectListOfUsers_underNormalConditions() {
 
@@ -31,6 +186,7 @@ public class UserControllerTests {
         assertEquals(userController.findAll().size(), 1);
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfUsers_withAnIncorrectData() {
 
@@ -40,6 +196,7 @@ public class UserControllerTests {
         assertEquals(userController.findAll().size(), 0);
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfUsers_inTheAbsenceOfAName() {
 
@@ -64,6 +221,7 @@ public class UserControllerTests {
         }
     }
 
+    @DirtiesContext
     @Test
     public void create_returnsTheCorrectListOfUsers_onBoundaryConditionsOfTheBirthday() {
 
@@ -78,6 +236,7 @@ public class UserControllerTests {
         assertEquals(userController.findAll().size(), 1);
     }
 
+    @DirtiesContext
     @Test
     public void put_returnsTheCorrectListOfUsers_underNormalConditions() {
 
